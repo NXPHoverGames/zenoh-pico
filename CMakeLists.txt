@@ -61,8 +61,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-  add_definition(ZENOH_LINUX)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR POSIX_COMPATIBLE)
+  add_definitions(-DZENOH_LINUX)
 elseif(CMAKE_SYSTEM_NAME MATCHES "BSD")
   add_definition(ZENOH_BSD)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
@@ -119,62 +119,17 @@ elseif(CMAKE_BUILD_TYPE MATCHES "RELEASE")
   endif()
 endif()
 
-file(GLOB PublicHeaders "include/*.h"
-  "include/zenoh-pico/*.h"
-  "include/zenoh-pico/api/*.h"
-  "include/zenoh-pico/collections/*.h"
-  "include/zenoh-pico/link/*.h"
-  "include/zenoh-pico/link/config/*.h"
-  "include/zenoh-pico/protocol/*.h"
-  "include/zenoh-pico/session/*.h"
-  "include/zenoh-pico/system/*.h"
-  "include/zenoh-pico/system/link/*.h"
-  "include/zenoh-pico/transport/*.h"
-  "include/zenoh-pico/utils/*.h"
+set(Libname "zenohpico")
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include
 )
-target_include_directories(${Libname} PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
-file(GLOB Sources "src/*.c"
-  "src/api/*.c"
-  "src/net/*.c"
-  "src/collections/*.c"
-  "src/link/*.c"
-  "src/link/config/*.c"
-  "src/link/unicast/*.c"
-  "src/link/multicast/*.c"
-  "src/protocol/*.c"
-  "src/protocol/keyexpr/*.c"
-  "src/session/*.c"
-  "src/system/*.c"
-  "src/transport/*.c"
-  "src/transport/common/*.c"
-  "src/transport/unicast/*.c"
-  "src/transport/unicast/link/*.c"
-  "src/transport/unicast/link/task/*.c"
-  "src/transport/multicast/*.c"
-  "src/transport/multicast/link/*.c"
-  "src/transport/multicast/link/task/*.c"
-  "src/utils/*.c"
-)
-
-if(WITH_ZEPHYR)
-  file (GLOB Sources_Zephyr "src/system/zephyr/*.c")
-  list(APPEND Sources ${Sources_Zephyr})
-elseif(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Darwin" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
-  file (GLOB Sources_Unix "src/system/unix/*.c")
-  list(APPEND Sources ${Sources_Unix})
-elseif(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
-  file (GLOB Sources_Emscripten "src/system/emscripten/*.c")
-  list(APPEND Sources ${Sources_Emscripten})
-elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-  file (GLOB Sources_Windows "src/system/windows/*.c")
-  list(APPEND Sources ${Sources_Windows})
-endif()
+add_subdirectory(include)
+add_subdirectory(src)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-target_sources(${Libname} PRIVATE ${Sources})
+add_library(${Libname} ${ZenohPicoSources})
 
 target_link_libraries(${Libname} Threads::Threads)
 
